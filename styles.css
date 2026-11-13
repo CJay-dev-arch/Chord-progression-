@@ -2161,3 +2161,83 @@ h1, h2, h3, h4, h5, .font-fun {
     grid-template-columns: repeat(7, 1fr);
   }
 }
+
+/* ----------------------------------------------------
+   CONSOLIDATED MINI-GAME MATCHER, SONG CREATOR & SKILLS
+   ---------------------------------------------------- */
+.skill-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.skill-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 10px;
+  background: #FAF9FF;
+  border: 1.5px solid var(--border-card);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-body);
+}
+
+.match-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.match-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.match-chip {
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 2px solid var(--border-card);
+  background: #FFFFFF;
+  color: var(--text-dark);
+  font-family: var(--font-fun);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 3px 0 var(--border-card-dark);
+  transition: all 0.12s;
+  text-align: center;
+}
+
+.match-chip:hover {
+  border-color: var(--brand-purple);
+  background: var(--brand-purple-light);
+}
+
+.match-chip.selected {
+  background: var(--brand-purple);
+  color: #FFFFFF;
+  border-color: var(--brand-purple-dark);
+  box-shadow: 0 3px 0 var(--brand-purple-dark);
+}
+
+.match-chip.matched {
+  background: var(--brand-green-light);
+  color: var(--brand-green-dark);
+  border-color: #A7F3D0;
+  box-shadow: none;
+  cursor: default;
+}
+
+.song-verse-box {
+  background: #FAF5FF;
+  border: 2px solid var(--border-card);
+  border-radius: 20px;
+  padding: 18px;
+  margin-top: 14px;
+}
+
