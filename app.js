@@ -1,8 +1,17 @@
+
 /**
  * ========================================================
- * MELODY MINDS - ULTRA-CHARACTERFUL JAVASCRIPT ENGINE
+ * MELODY MINDS - COMPLETE HTML / CSS / JS ENGINE
  * "Where Little Minds Learn Through Music!"
+ * Consolidated from types.ts, curriculumData.ts, & API fallbacks
  * ========================================================
+ *
+ * @typedef {'Discover'|'Learn'|'Practice'|'Demonstrate'|'Master'|'Expand'} Stage
+ * @typedef {{ id: string, title: string, stage: Stage, status: string, icon: string }} SkillNode
+ * @typedef {{ id: string, title: string, artist: string, subjectId: string, emoji: string, duration: number, tempo: number, mood: string, minTier: string, lyrics: string[], notes: string[] }} Song
+ * @typedef {{ id: string, title: string, type: string, subjectId: string, difficulty: string, instructions: string, pairs?: Array<{id: string, label: string, match: string}> }} MiniGame
+ * @typedef {{ id: string, title: string, emoji: string, desc: string }} Badge
+ * @typedef {{ id: string, name: string, age: number, avatar: string, stars: number, streak: number, outfit: string, unlockedOutfits: string[], completedLessons: string[], favoriteSongs: string[], soundEnabled: boolean, narrationEnabled: boolean }} LearnerProfile
  */
 const SUPABASE_URL = 'https://aieeaeokaqgiqholitnm.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_zFgPi8HXGflcsYRRmz7Sag_fMFUAVpI';
@@ -354,6 +363,42 @@ const SONGS = [
     notes: ['C4', 'E4', 'G4', 'C5', 'E5', 'C5', 'G4', 'C4']
   },
   {
+    id: 'song_feelings_flow',
+    title: 'Feelings Flow Like Waves',
+    artist: 'Heart & Harmony',
+    subjectId: 'emotional_intelligence',
+    emoji: '💖',
+    duration: 16,
+    tempo: 96,
+    mood: 'Calming & Gentle',
+    minTier: 'free',
+    lyrics: [
+      'Sometimes happy, sometimes sad, 🌊',
+      'Sometimes calm, and sometimes mad.',
+      'Take a slow breath, count to three, 🎈',
+      'All your feelings are welcome with me! 🌿'
+    ],
+    notes: ['G4', 'E4', 'F4', 'D4', 'C4']
+  },
+  {
+    id: 'song_manners_matter',
+    title: 'Please & Thank You Beat',
+    artist: 'Sunny Smiles',
+    subjectId: 'life_skills',
+    emoji: '🤝',
+    duration: 15,
+    tempo: 114,
+    mood: 'Polite & Cheerful',
+    minTier: 'free',
+    lyrics: [
+      'Two little words have superpower keys, ✨',
+      'Whenever you ask, remember PLEASE!',
+      'And when a helper lends a hand, 🤝',
+      'THANK YOU spreads smiles across the land! 🌸'
+    ],
+    notes: ['C4', 'E4', 'G4', 'C5', 'G4', 'C5']
+  },
+  {
     id: 'song_symphony',
     title: 'Grand Symphony Concerto',
     artist: 'Melody Minds Philharmonic',
@@ -618,11 +663,53 @@ const SUBJECTS = [
   }
 ];
 
+const MINI_GAMES = [
+  {
+    id: 'game_rhythm_echo',
+    title: 'Rhythm Beat Tapper',
+    type: 'rhythm',
+    subjectId: 'music',
+    difficulty: 'easy',
+    instructions: 'Tap the drum on Beat 1 to build your rhythm score!'
+  },
+  {
+    id: 'game_match_animals',
+    title: '🦉 Animal Orchestra Matching',
+    type: 'matching',
+    subjectId: 'science',
+    difficulty: 'easy',
+    instructions: 'Match each animal friend to their natural habitat!',
+    pairs: [
+      { id: 'p1', label: '🦁 Lion', match: 'Savannah Grasslands' },
+      { id: 'p2', label: '🐬 Dolphin', match: 'Deep Ocean Blue' },
+      { id: 'p3', label: '🦉 Owl', match: 'Nocturnal Forest' },
+      { id: 'p4', label: '🐧 Penguin', match: 'Icy Antarctica' }
+    ]
+  },
+  {
+    id: 'game_reading_phonics',
+    title: '📖 Phonics Rhyme Builder',
+    type: 'matching',
+    subjectId: 'reading',
+    difficulty: 'medium',
+    instructions: 'Connect words that make the exact same rhyming beat!',
+    pairs: [
+      { id: 'rp1', label: 'CAT 🐱', match: 'HAT 🎩' },
+      { id: 'rp2', label: 'SUN ☀️', match: 'FUN 🎉' },
+      { id: 'rp3', label: 'STAR ⭐', match: 'CAR 🚗' },
+      { id: 'rp4', label: 'TREE 🌳', match: 'BEE 🐝' }
+    ]
+  }
+];
+
 const BADGES = [
   { id: 'b_first_song', title: 'Rhythm Starter', emoji: '🎵', desc: 'Played your first educational learning song.' },
   { id: 'b_piano_star', title: 'Xylophone Composer', emoji: '🎹', desc: 'Composed your own melody with the Rainbow keys.' },
-  { id: 'b_math_whiz', title: 'Number Master', emoji: '🔢', desc: 'Solved mathematics challenges in rhythm.' },
+  { id: 'b_math_whiz', title: 'Counting Champion', emoji: '🔢', desc: 'Mastered counting beats to ten in rhythm.' },
+  { id: 'b_science', title: 'Science Detective', emoji: '💧', desc: 'Explored the dancing water cycle and habitats.' },
+  { id: 'b_robot', title: 'STEM Inventor', emoji: '🤖', desc: 'Programmed the robotic dance sequence.' },
   { id: 'b_streak_hero', title: 'Flame Keeper', emoji: '🔥', desc: 'Maintained a 4+ day rhythm learning streak.' },
+  { id: 'b_growth', title: 'Growth Mindset Hero', emoji: '🌱', desc: 'Embraced the magic superpower of YET!' },
   { id: 'b_explorer', title: 'Melody Explorer', emoji: '🌟', desc: 'Explored all 11 core educational subjects.' },
   { id: 'b_vip_rocker', title: 'Rhythm VIP Rocker', emoji: '🎸', desc: 'Unlocked Unlimited Lifes with free membership pass.' }
 ];
@@ -2078,11 +2165,61 @@ function getLocalMascotReply(msg, name) {
   return `Hi ${name}! 🎵 Every question you ask makes your Melody Mind grow brighter! Remember the superpower of YET! 🌟`;
 }
 
-// --- 18. AI STORYBOOK GENERATOR ---
+// --- 18. AI STORYBOOK GENERATOR (WITH 100% STANDALONE FALLBACK) ---
+function buildLocalStorybook(topic, subject, childName) {
+  return {
+    title: `${childName} & The Melody of ${topic}`,
+    subtitle: `An enchanting musical journey discovering ${subject}.`,
+    chapters: [
+      {
+        chapterNumber: 1,
+        title: 'The Whispering Note',
+        text: `Once upon a sunny morning, ${childName} heard a sweet melody floating through the breeze like a silver chime. Following the tune, ${childName} met Melody the musical mascot smiling brightly!`,
+        musicalSoundEffect: 'gentle glockenspiel chimes'
+      },
+      {
+        chapterNumber: 2,
+        title: 'Dancing With the Rhythm',
+        text: `Melody smiled and said, "Look closely, ${childName}! Every wonder of ${topic} has its own steady beat!" Together they clapped along and watched ideas sparkle in rhythm.`,
+        musicalSoundEffect: 'bouncy marimba steps'
+      },
+      {
+        chapterNumber: 3,
+        title: 'The Great Symphony of Discovery',
+        text: `With a heart full of joy and a mind full of harmony, ${childName} discovered that whenever learning feels brand-new, music makes it unforgettable forever!`,
+        musicalSoundEffect: 'triumphant piano fanfare'
+      }
+    ],
+    rhymingChant: `Step by step and note by note, we sing the words the rhythm wrote! ${topic} is our favorite song, together we are brave and strong!`
+  };
+}
+
+function renderStorybookHTML(output, story) {
+  output.innerHTML = `
+    <div style="background:#FAF5FF; padding:20px; border-radius:24px; border:3px solid #E9D5FF; margin-top:16px;">
+      <h4 class="font-fun" style="font-size:22px; color:#7E22CE; margin-bottom:4px;">${story.title}</h4>
+      <p style="font-size:13px; color:#64748B; margin-bottom:16px;">${story.subtitle || ''}</p>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        ${story.chapters.map(c => `
+          <div style="background:#FFFFFF; padding:14px 16px; border-radius:18px; border:2px solid #F3E8FF;">
+            <div style="font-weight:700; font-size:15px; color:#1E1B4B;">Chapter ${c.chapterNumber}: ${c.title}</div>
+            <div style="font-size:14px; color:#4B5563; line-height:1.5; margin-top:6px;">${c.text}</div>
+            <div style="font-size:12px; font-weight:800; color:#7E22CE; margin-top:8px;">🎵 Sound Effect: ${c.musicalSoundEffect}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div style="margin-top:16px; padding:12px 16px; background:#FEF3C7; border-radius:18px; font-weight:700; font-size:14px; color:#92400E; border:2px solid #FDE68A;">
+        Sing-Along Chant: <br><span style="font-style:italic; font-weight:600;">${story.rhymingChant}</span>
+      </div>
+    </div>
+  `;
+}
+
 async function generateAIStorybook() {
   const topicInput = document.getElementById('storybook-topic');
   const topic = (topicInput ? topicInput.value.trim() : '') || 'The Musical Garden';
   const learner = getActiveLearner();
+  const childName = state.user.signedIn ? state.user.stageName : learner.name;
   const output = document.getElementById('storybook-result');
   if (output) output.innerHTML = '<p style="text-align:center; padding:20px;">Weaving a magical musical tale for you... 🎶📖</p>';
 
@@ -2093,36 +2230,170 @@ async function generateAIStorybook() {
       body: JSON.stringify({
         topic,
         subject: 'Story Adventure',
-        learnerName: state.user.signedIn ? state.user.stageName : learner.name,
+        learnerName: childName,
         learnerAge: learner.age
       })
     });
+    if (!res.ok) throw new Error('Offline mode');
     const data = await res.json();
-    const story = data.storybook;
-
-    if (story && story.chapters) {
-      output.innerHTML = `
-        <div style="background:#FAF5FF; padding:20px; border-radius:24px; border:3px solid #E9D5FF; margin-top:16px;">
-          <h4 class="font-fun" style="font-size:22px; color:#7E22CE; margin-bottom:4px;">${story.title}</h4>
-          <p style="font-size:13px; color:#64748B; margin-bottom:16px;">${story.subtitle || ''}</p>
-          <div style="display:flex; flex-direction:column; gap:14px;">
-            ${story.chapters.map(c => `
-              <div style="background:#FFFFFF; padding:14px 16px; border-radius:18px; border:2px solid #F3E8FF;">
-                <div style="font-weight:700; font-size:15px; color:#1E1B4B;">Chapter ${c.chapterNumber}: ${c.title}</div>
-                <div style="font-size:14px; color:#4B5563; line-height:1.5; margin-top:6px;">${c.text}</div>
-                <div style="font-size:12px; font-weight:800; color:#9333EA; margin-top:8px;">🎵 Sound Effect: ${c.musicalSoundEffect}</div>
-              </div>
-            `).join('')}
-          </div>
-          <div style="margin-top:16px; padding:12px 16px; background:#FEF3C7; border-radius:18px; font-weight:700; font-size:14px; color:#92400E; border:2px solid #FDE68A;">
-            Sing-Along Chant: <br><span style="font-style:italic; font-weight:600;">${story.rhymingChant}</span>
-          </div>
-        </div>
-      `;
+    if (data && data.storybook && data.storybook.chapters) {
+      renderStorybookHTML(output, data.storybook);
       audio.playCorrectSound();
+      return;
     }
   } catch (e) {
-    if (output) output.innerHTML = `<p style="color:#EF4444;">Could not load story. Please check internet connection.</p>`;
+    // Seamless standalone client-side fallback
+  }
+
+  if (output) {
+    renderStorybookHTML(output, buildLocalStorybook(topic, 'Story Adventure', childName));
+    audio.playCorrectSound();
+  }
+}
+
+// --- 18B. SONG & RHYME CREATOR (CONSOLIDATED FROM SERVER) ---
+function buildLocalSong(topic) {
+  return {
+    title: `The ${topic} Groove`,
+    tempoBpm: 114,
+    verse: `Look around and what do you see?\n${topic} is waiting for you and me!\nStep by step we understand,\nThe brightest little minds in the land!`,
+    chorus: `Sing it loud, sing it clear,\n${topic} music is right here!\nTap your feet to the learning beat,\nMelody Minds makes learning sweet!`,
+    educationalTip: `${topic} helps us notice joyful patterns and rhythm in our world!`
+  };
+}
+
+async function generateCustomSong() {
+  const input = document.getElementById('song-creator-topic');
+  const topic = (input ? input.value.trim() : '') || 'Dancing Stars';
+  const output = document.getElementById('song-creator-result');
+  if (!output) return;
+
+  output.innerHTML = '<p style="text-align:center; padding:16px;">Composing a bouncy rhythm... 🎤🎵</p>';
+  let song = null;
+
+  try {
+    const res = await fetch('/api/gemini/song-creator', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic, subject: 'Music & Discovery', style: 'bouncy kids song' })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.song && data.song.title) song = data.song;
+    }
+  } catch (e) {}
+
+  if (!song) song = buildLocalSong(topic);
+
+  output.innerHTML = `
+    <div class="song-verse-box">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px;">
+        <h4 class="font-fun" style="font-size:20px; color:#7E22CE;">🎶 ${song.title}</h4>
+        <span class="badge-pill">${song.tempoBpm || 114} BPM</span>
+      </div>
+      <div style="background:#FFFFFF; padding:12px 14px; border-radius:14px; border:1.5px solid #E9D5FF; margin-bottom:10px; white-space:pre-line; font-size:14px;">
+        <strong style="color:#EC4899;">Verse:</strong>\n${song.verse}
+      </div>
+      <div style="background:#FEF3C7; padding:12px 14px; border-radius:14px; border:1.5px solid #FDE68A; margin-bottom:10px; white-space:pre-line; font-size:14px; color:#78350F;">
+        <strong style="color:#B45309;">Chorus:</strong>\n${song.chorus}
+      </div>
+      <div style="font-size:13px; font-weight:700; color:#1E1B4B;">💡 ${song.educationalTip}</div>
+    </div>
+  `;
+  audio.playFanfare();
+}
+
+// --- 18C. MATCHING MINI-GAME (ANIMAL ORCHESTRA & PHONICS RHYMES) ---
+let matchState = { gameId: 'game_match_animals', selectedLeft: null, matchedIds: [] };
+
+function startMatchGame(gameId = 'game_match_animals') {
+  const game = MINI_GAMES.find(g => g.id === gameId) || MINI_GAMES[1];
+  matchState = { gameId: game.id, selectedLeft: null, matchedIds: [] };
+
+  const titleEl = document.getElementById('match-game-title');
+  const descEl = document.getElementById('match-game-desc');
+  const progEl = document.getElementById('match-game-progress');
+  const btnAnimals = document.getElementById('match-switch-animals');
+  const btnPhonics = document.getElementById('match-switch-phonics');
+
+  if (titleEl) titleEl.textContent = game.title;
+  if (descEl) descEl.textContent = game.instructions;
+  if (progEl) progEl.textContent = `0 / ${game.pairs.length}`;
+  if (btnAnimals) btnAnimals.classList.toggle('active', game.id === 'game_match_animals');
+  if (btnPhonics) btnPhonics.classList.toggle('active', game.id === 'game_reading_phonics');
+
+  const leftCol = document.getElementById('match-left-col');
+  const rightCol = document.getElementById('match-right-col');
+  if (leftCol && rightCol) {
+    leftCol.innerHTML = '';
+    rightCol.innerHTML = '';
+
+    const shuffledRight = [...game.pairs].sort(() => Math.random() - 0.5);
+
+    game.pairs.forEach(p => {
+      const btn = document.createElement('button');
+      btn.className = 'match-chip';
+      btn.id = `match-left-${p.id}`;
+      btn.textContent = p.label;
+      btn.onclick = () => selectMatchItem('left', p.id);
+      leftCol.appendChild(btn);
+    });
+
+    shuffledRight.forEach(p => {
+      const btn = document.createElement('button');
+      btn.className = 'match-chip';
+      btn.id = `match-right-${p.id}`;
+      btn.textContent = p.match;
+      btn.onclick = () => selectMatchItem('right', p.id);
+      rightCol.appendChild(btn);
+    });
+  }
+
+  openModal('modal-match-game');
+}
+
+function selectMatchItem(side, pairId) {
+  if (matchState.matchedIds.includes(pairId)) return;
+
+  if (side === 'left') {
+    document.querySelectorAll('#match-left-col .match-chip').forEach(b => b.classList.remove('selected'));
+    matchState.selectedLeft = pairId;
+    const el = document.getElementById(`match-left-${pairId}`);
+    if (el) el.classList.add('selected');
+    audio.playNote('C5', 0.15, 'marimba');
+    return;
+  }
+
+  if (!matchState.selectedLeft) {
+    showToast('Tap a card on the left column first! 👈');
+    return;
+  }
+
+  const game = MINI_GAMES.find(g => g.id === matchState.gameId);
+  if (matchState.selectedLeft === pairId) {
+    matchState.matchedIds.push(pairId);
+    const lEl = document.getElementById(`match-left-${pairId}`);
+    const rEl = document.getElementById(`match-right-${pairId}`);
+    if (lEl) { lEl.classList.remove('selected'); lEl.classList.add('matched'); }
+    if (rEl) rEl.classList.add('matched');
+    matchState.selectedLeft = null;
+    audio.playCorrectSound();
+
+    const progEl = document.getElementById('match-game-progress');
+    if (progEl && game) progEl.textContent = `${matchState.matchedIds.length} / ${game.pairs.length}`;
+
+    if (game && matchState.matchedIds.length === game.pairs.length) {
+      getActiveLearner().stars += 15;
+      saveState();
+      triggerConfetti();
+      audio.playFanfare();
+      showToast('🎉 All Pairs Matched! +15 Stars! ⭐');
+    }
+  } else {
+    audio.playTryAgainSound();
+    showToast('Try another match! 🎵');
+    document.querySelectorAll('#match-left-col .match-chip').forEach(b => b.classList.remove('selected'));
+    matchState.selectedLeft = null;
   }
 }
 
@@ -2349,11 +2620,12 @@ async function loadDailyFact(forceRefresh = false) {
     const res = await fetch(`/api/gemini/daily-fact?subject=${encodeURIComponent(pick)}`);
     if (!res.ok) throw new Error('Fact unavailable');
     const data = await res.json();
-    if (data && data.title && data.fact) {
-      if (emojiEl) emojiEl.textContent = data.emoji || '🎵';
-      titleEl.textContent = data.title;
-      textEl.textContent = data.fact;
-      if (chantEl) chantEl.textContent = `"${data.rhymingChant || 'Sing and learn every day!'}"`;
+    const f = (data && data.fact && typeof data.fact === 'object') ? data.fact : data;
+    if (f && f.title && f.fact) {
+      if (emojiEl) emojiEl.textContent = f.emoji || '🎵';
+      titleEl.textContent = f.title;
+      textEl.textContent = f.fact;
+      if (chantEl) chantEl.textContent = `"${f.rhymingChant || 'Sing and learn every day!'}"`;
       if (forceRefresh) {
         audio.playNote('E5', 0.25, 'chime');
         showToast('Loaded a fresh musical fact! ✨');
@@ -2434,6 +2706,9 @@ window.cycleOrAddProfile = cycleOrAddProfile;
 window.sendCompanionMessage = sendCompanionMessage;
 window.sendPresetCompanionPrompt = sendPresetCompanionPrompt;
 window.generateAIStorybook = generateAIStorybook;
+window.generateCustomSong = generateCustomSong;
+window.startMatchGame = startMatchGame;
+window.selectMatchItem = selectMatchItem;
 window.startRhythmGame = startRhythmGame;
 window.tapRhythmDrum = tapRhythmDrum;
 window.stopRhythmGame = stopRhythmGame;
