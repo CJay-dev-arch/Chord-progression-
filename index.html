@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="./style.css">
   </head>
   <body>
 
@@ -275,20 +275,20 @@
                     <span class="bento-mini-tile-title">Beat Tapper</span>
                     <span class="bento-mini-tile-sub">Mini-Game (+25 ⭐)</span>
                   </button>
+                  <button class="bento-mini-tile" onclick="startMatchGame('game_match_animals')">
+                    <span style="font-size:28px;">🦉</span>
+                    <span class="bento-mini-tile-title">Animal Match</span>
+                    <span class="bento-mini-tile-sub">Habitat Puzzle</span>
+                  </button>
                   <button class="bento-mini-tile" onclick="openModal('modal-storybook')">
                     <span style="font-size:28px;">📖</span>
                     <span class="bento-mini-tile-title">AI Storybook</span>
                     <span class="bento-mini-tile-sub">Create A Tale</span>
                   </button>
-                  <button class="bento-mini-tile" onclick="openMagicChest()">
-                    <span style="font-size:28px;">🎁</span>
-                    <span class="bento-mini-tile-title">Magic Chest</span>
-                    <span class="bento-mini-tile-sub">Daily Star Gift</span>
-                  </button>
-                  <button class="bento-mini-tile" onclick="showView('rewards')">
-                    <span style="font-size:28px;">👑</span>
-                    <span class="bento-mini-tile-title">Dress-Up</span>
-                    <span class="bento-mini-tile-sub">Outfits &amp; Trophies</span>
+                  <button class="bento-mini-tile" onclick="openModal('modal-song-creator')">
+                    <span style="font-size:28px;">🎤</span>
+                    <span class="bento-mini-tile-title">Song Maker</span>
+                    <span class="bento-mini-tile-sub">Write A Rhyme</span>
                   </button>
                 </div>
               </div>
@@ -717,8 +717,11 @@
                 </div>
               </div>
               <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <input type="text" id="music-search" class="duo-input" style="max-width:240px; padding:10px 14px;" placeholder="🔍 Search songs..." oninput="renderMusicView()" />
-                <button class="btn-duo btn-duo-purple" style="padding:10px 18px; font-size:13px;" onclick="openModal('modal-storybook')">
+                <input type="text" id="music-search" class="duo-input" style="max-width:220px; padding:10px 14px;" placeholder="🔍 Search songs..." oninput="renderMusicView()" />
+                <button class="btn-duo btn-duo-pink" style="padding:10px 16px; font-size:13px;" onclick="openModal('modal-song-creator')">
+                  <span>🎤</span> Song Maker
+                </button>
+                <button class="btn-duo btn-duo-purple" style="padding:10px 16px; font-size:13px;" onclick="openModal('modal-storybook')">
                   <span>📖</span> AI Storybook
                 </button>
               </div>
@@ -1271,6 +1274,48 @@
       </div>
     </div>
 
+    <!-- ==================================================== -->
+    <!-- AI SONG CREATOR MODAL (CONSOLIDATED FROM SERVER)     -->
+    <!-- ==================================================== -->
+    <div class="modal-overlay" id="modal-song-creator">
+      <div class="modal-card">
+        <button class="modal-close-x" onclick="closeModals()">✕</button>
+        <h3 class="font-fun" style="font-size:22px; color:#1E1B4B; margin-bottom:4px;">🎤 Educational Song &amp; Rhyme Creator</h3>
+        <p style="font-size:13px; color:#64748B; margin-bottom:16px;">Pick any topic and Melody will compose a catchy learning song!</p>
+
+        <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+          <input type="text" id="song-creator-topic" class="duo-input" style="flex:1; min-width:180px;" placeholder="Topic (e.g. Planets, Dinosaurs, Fractions)..." />
+          <button class="btn-duo btn-duo-pink" style="padding:12px 20px; white-space:nowrap;" onclick="generateCustomSong()">Compose 🎶</button>
+        </div>
+
+        <div id="song-creator-result"></div>
+      </div>
+    </div>
+
+    <!-- ==================================================== -->
+    <!-- MATCHING MINI-GAME MODAL (ANIMALS & PHONICS RHYMES)  -->
+    <!-- ==================================================== -->
+    <div class="modal-overlay" id="modal-match-game">
+      <div class="modal-card" style="max-width:540px;">
+        <button class="modal-close-x" onclick="closeModals()">✕</button>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; padding-right:34px;">
+          <h3 class="font-fun" style="font-size:22px; color:#1E1B4B;" id="match-game-title">🦉 Animal Orchestra Matching</h3>
+          <span class="badge-pill" id="match-game-progress">0 / 4</span>
+        </div>
+        <p style="font-size:13px; color:#64748B; margin-bottom:12px;" id="match-game-desc">Tap one item on the left, then tap its matching partner on the right!</p>
+
+        <div style="display:flex; gap:8px; margin-bottom:12px;">
+          <button class="filter-btn active" id="match-switch-animals" onclick="startMatchGame('game_match_animals')">🦁 Animals</button>
+          <button class="filter-btn" id="match-switch-phonics" onclick="startMatchGame('game_reading_phonics')">📖 Rhymes</button>
+        </div>
+
+        <div class="match-columns">
+          <div class="match-col" id="match-left-col"></div>
+          <div class="match-col" id="match-right-col"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Bottom Mobile Dock (shown on <960px screens) -->
     <nav class="bottom-dock">
       <button class="dock-tab active" id="dock-btn-home" onclick="showView('home')">
@@ -1311,6 +1356,7 @@
     <div class="duo-toast" id="app-toast">Notification</div>
     
     <script src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"> </script>
-    <script type="module" src="/app.js"></script>
+    <!-- Application Script -->
+    <script type="module" src="./app.js"></script>
   </body>
 </html>
