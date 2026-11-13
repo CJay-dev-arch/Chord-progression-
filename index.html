@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#6558e8">
+  <title>SoundSprout — Learn life skills through music</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="SoundSprout home">
+        <span class="brand-mark" aria-hidden="true">♫</span>
+        <span>SoundSprout</span>
+      </a>
+      <div class="top-actions">
+        <span class="streak" aria-label="Practice streak">✨ <span id="streakCount">1 day</span></span>
+        <button class="avatar" id="profileButton" type="button" aria-label="Open profile">🐻</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="welcome panel">
+        <div class="welcome-copy">
+          <p class="eyebrow">YOUR MUSICAL LEARNING ADVENTURE</p>
+          <h1 id="greeting">Ready to make some noise?</h1>
+          <p>Play, listen, and grow your real-world skills—one little beat at a time.</p>
+          <div class="welcome-buttons">
+            <button class="button button-light" id="startLevelTest" type="button">Find my level <span aria-hidden="true">→</span></button>
+            <button class="button button-ghost" id="playWelcomeTune" type="button">♫ Play a tune</button>
+          </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="sun"></div><div class="note note-one">♪</div><div class="note note-two">♫</div>
+          <div class="music-buddy"><div class="buddy-ear left"></div><div class="buddy-ear right"></div><div class="buddy-face"><i></i><i></i><b></b><span></span></div></div>
+          <div class="floating-star star-one">✦</div><div class="floating-star star-two">✧</div>
+        </div>
+      </section>
+
+      <section class="progress-grid" aria-label="Your progress">
+        <article class="stat-card"><span class="stat-icon lilac">🎵</span><div><p>Beats played</p><strong id="beatsPlayed">0</strong></div></article>
+        <article class="stat-card"><span class="stat-icon peach">🌱</span><div><p>Skills growing</p><strong id="skillsCount">3</strong></div></article>
+        <article class="stat-card"><span class="stat-icon mint">🏆</span><div><p>Stars earned</p><strong id="starsEarned">0</strong></div></article>
+      </section>
+
+      <section class="section-heading">
+        <div><p class="eyebrow">PICK YOUR PATH</p><h2>What shall we practice?</h2></div>
+        <span class="tiny-label">Short lessons · Big discoveries</span>
+      </section>
+
+      <section class="lesson-grid" id="lessonGrid" aria-label="Learning activities">
+        <article class="lesson-card card-purple">
+          <div class="lesson-illustration rhythm-art" aria-hidden="true"><span>♪</span><span>♫</span><span>♪</span></div>
+          <div class="lesson-content"><span class="pill">LISTEN + MOVE</span><h3>Rhythm Rangers</h3><p>Follow a beat to build focus, timing, and listening skills.</p><div class="lesson-meta"><span>⏱ 3 min</span><span>⭐ Beginner</span></div><button class="button button-primary lesson-button" data-lesson="rhythm" type="button">Play lesson <span>→</span></button></div>
+        </article>
+        <article class="lesson-card card-orange">
+          <div class="lesson-illustration choices-art" aria-hidden="true"><div class="choice-circle">?</div><span>💡</span><span>💛</span></div>
+          <div class="lesson-content"><span class="pill">THINK + CHOOSE</span><h3>Feelings DJ</h3><p>Match music to emotions and practice naming your feelings.</p><div class="lesson-meta"><span>⏱ 4 min</span><span>⭐ Beginner</span></div><button class="button button-primary lesson-button" data-lesson="feelings" type="button">Play lesson <span>→</span></button></div>
+        </article>
+        <article class="lesson-card card-green">
+          <div class="lesson-illustration money-art" aria-hidden="true"><span>🪙</span><span>🎶</span><span>🌟</span></div>
+          <div class="lesson-content"><span class="pill">COUNT + PLAN</span><h3>Save-a-Beat</h3><p>Learn simple saving and goal-setting with a counting song.</p><div class="lesson-meta"><span>⏱ 5 min</span><span>⭐ Beginner</span></div><button class="button button-primary lesson-button" data-lesson="saving" type="button">Play lesson <span>→</span></button></div>
+        </article>
+      </section>
+
+      <section class="bottom-grid">
+        <article class="practice-panel">
+          <div class="section-heading compact"><div><p class="eyebrow">QUICK PLAY</p><h2>Tap the beat!</h2></div><span class="music-badge">♫</span></div>
+          <p class="muted">Listen to the sound, then tap the big button along with it.</p>
+          <div class="beat-stage">
+            <div class="beat-orb" id="beatOrb" aria-hidden="true">♪</div>
+            <button class="tap-button" id="tapBeat" type="button">TAP!</button>
+          </div>
+          <div class="beat-footer"><span id="beatMessage" role="status" aria-live="polite">Ready when you are!</span><button class="text-button" id="playBeat" type="button">▶ Hear the beat</button></div>
+        </article>
+
+        <article class="profile-panel">
+          <p class="eyebrow">YOUR LITTLE WINS</p><h2>Look how far you’ve come!</h2>
+          <div class="achievement"><span class="achievement-icon">🌈</span><div><strong>Curious Explorer</strong><p>Try a lesson to earn your first star.</p></div><span class="lock" id="firstStarStatus">🔒</span></div>
+          <div class="achievement"><span class="achievement-icon">🎧</span><div><strong>Listening Legend</strong><p>Play 5 beats in Quick Play.</p></div><span class="lock" id="beatBadgeStatus">🔒</span></div>
+          <button class="button button-outline full-width" id="viewProgress" type="button">View my progress</button>
+        </article>
+      </section>
+
+      <footer class="footer"><span>SoundSprout 🌱</span><span>Practice at your own pace. Every try counts.</span><button id="parentSettings" class="text-button" type="button">Grown-up settings</button></footer>
+    </main>
+  </div>
+
+  <dialog id="appDialog" class="app-dialog" aria-labelledby="dialogTitle">
+    <div class="dialog-top"><span class="dialog-sparkle">✦</span><button class="close-dialog" id="closeDialog" type="button" aria-label="Close dialog">×</button></div>
+    <div id="dialogBody"></div>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
