@@ -2,6 +2,9 @@
  * Frontend-only learning demo. See CONFIG below to connect your own API.
  * Do not use the demo account flow for real children or real personal data.
  */
+const SUPABASE_URL = 'https://aieeaeokaqgiqholitnm.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_zFgPi8HXGflcsYRRmz7Sag_fMFUAVpI';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 (() => {
   "use strict";
 
