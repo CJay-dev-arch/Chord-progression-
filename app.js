@@ -2180,16 +2180,202 @@ function sendPresetCompanionPrompt(presetText) {
 
 function getLocalMascotReply(msg, name) {
   const m = msg.toLowerCase();
-  if (m.includes('math') || m.includes('count')) {
+  if (/\b(hi|hello|hey|morning|afternoon)\b/.test(m)) {
+    return `Hi there, ${name}! 🎵 I'm so happy to hear your voice! Want to sing a note, play the xylophone, or explore a science island? ✨`;
+  }
+  if (m.includes('math') || m.includes('count') || m.includes('number') || m.includes('add')) {
     return `Numbers have their own rhythm, ${name}! 🥁 1, 2, 3... every number is like a steady drumbeat! Let's clap out the answer together! ✨`;
   }
-  if (m.includes('read') || m.includes('letter') || m.includes('book')) {
+  if (m.includes('read') || m.includes('letter') || m.includes('book') || m.includes('story')) {
     return `Letters are the notes that compose the music of words! 📖 When we sing letter sounds together, stories come alive! 🎶`;
   }
-  if (m.includes('science') || m.includes('rain') || m.includes('space')) {
+  if (m.includes('science') || m.includes('rain') || m.includes('space') || m.includes('planet') || m.includes('star')) {
     return `Science is nature's song! 🌧️ Did you know clouds are like soft sponges floating in the sky until they dance as raindrops? 🌈`;
   }
-  return `Hi ${name}! 🎵 Every question you ask makes your Melody Mind grow brighter! Remember the superpower of YET! 🌟`;
+  if (m.includes('sing') || m.includes('song') || m.includes('music') || m.includes('dance')) {
+    return `La-la-la! 🎤 Singing makes our brains sparkle! Tap the Rainbow Xylophone or open Song Maker to compose your very own hit! 🎹✨`;
+  }
+  if (m.includes('animal') || m.includes('lion') || m.includes('frog') || m.includes('dog') || m.includes('cat')) {
+    return `Every animal has a musical voice! 🦁 Lions roar low bass notes, while tiny birds whistle high flutes! Try Animal Match or DJ Safari! 🐾🎶`;
+  }
+  if (m.includes('color') || m.includes('rainbow')) {
+    return `Just like a rainbow has 7 bright colors, our xylophone has 7 sparkling musical notes! 🌈 Red C, Orange D, Yellow E—let's play them all! 🎵`;
+  }
+  if (m.includes('joke') || m.includes('funny')) {
+    return `Hehehe! What is a frog's favorite kind of music? 🐸 Hip-HOP! Ba-dum-tss! 🥁😄`;
+  }
+  if (m.includes('your name') || m.includes('who are you')) {
+    return `I'm Melody, your musical note buddy! 🎵 My favorite hobby is singing ABCs, dancing to drumbeats, and cheering you on! 🌟`;
+  }
+  return `That's awesome, ${name}! 🎵 Every time you speak and ask questions, your Melody Mind grows brighter! Let's make music together! 🌟`;
+}
+
+// --- 17B. SPEAK TO MELODY (VOICE RECOGNITION) ---
+let _melodyRecognition = null;
+let _isMelodyListening = false;
+
+function setMelodyListeningUI(isListening) {
+  _isMelodyListening = isListening;
+  const homeBtn = document.getElementById('btn-speak-melody-home');
+  const modalBtn = document.getElementById('btn-speak-melody-modal');
+
+  if (homeBtn) {
+    homeBtn.classList.toggle('mic-listening', isListening);
+    homeBtn.textContent = isListening ? '🔴 Listening... (Tap to Stop)' : '🎙️ Speak to Melody';
+  }
+  if (modalBtn) {
+    modalBtn.classList.toggle('mic-listening', isListening);
+    modalBtn.textContent = isListening ? '🔴' : '🎙️';
+  }
+}
+
+async function handleHomeSpokenMessage(spokenText) {
+  const learner = getActiveLearner();
+  const childName = state.user.signedIn ? state.user.stageName : learner.name;
+  setMascotSpeech(`"${spokenText}" — hmm, let me tune a reply! 🎵`);
+  triggerMascotBounce();
+
+  let replyText = '';
+  if (canUseBackendApi()) {
+    try {
+      const res = await fetch('/api/gemini/companion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: spokenText,
+          learnerName: childName,
+          learnerAge: learner.age,
+          subject: 'Voice Conversation'
+        })
+      });
+      if (!res.ok) {
+        if (res.status === 404) _backendApiAvailable = false;
+        throw new Error('Offline mode');
+      }
+      const data = await res.json();
+      if (data && data.reply) replyText = data.reply;
+    } catch (e) {}
+  }
+
+  if (!replyText) {
+    replyText = getLocalMascotReply(spokenText, childName);
+  }
+
+  learner.stars += 2;
+  saveState();
+  setMascotSpeech(replyText);
+  audio.playNote('E5', 0.25, 'chime');
+  if (learner.narrationEnabled) {
+    audio.speakNarration(replyText);
+  }
+  showToast('Melody heard you! +2 Stars 🌟');
+}
+
+function toggleSpeakToMelody(source = 'home') {
+  if (_isMelodyListening && _melodyRecognition) {
+    try {
+      _melodyRecognition.stop();
+    } catch (e) {}
+    setMelodyListeningUI(false);
+    return;
+  }
+
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) {
+    setMascotSpeech("Oops! Voice mic isn't supported in this browser—tap Ask Melody AI to chat by typing! 💬🎵");
+    showToast('Try Chrome, Edge, or Safari for voice mic—or type in Ask Melody AI! 💬');
+    if (source === 'home') openModal('modal-companion');
+    return;
+  }
+
+  try {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    const recognition = new SpeechRec();
+    _melodyRecognition = recognition;
+    recognition.lang = 'en-US';
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    let finalTranscript = '';
+    let handled = false;
+
+    audio.playNote('G5', 0.2, 'chime');
+    setMelodyListeningUI(true);
+    if (source === 'home') {
+      setMascotSpeech("I'm listening! Say hello or ask me anything! 🎙️✨");
+    } else {
+      const input = document.getElementById('companion-input');
+      if (input) input.placeholder = "Listening... speak into your mic! 🎙️";
+    }
+
+    recognition.onresult = (event) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+        } else {
+          interim += transcript;
+        }
+      }
+      const liveText = (finalTranscript || interim).trim();
+      if (liveText) {
+        if (source === 'home') {
+          setMascotSpeech(`Hearing: "${liveText}" 🎙️`);
+        } else {
+          const input = document.getElementById('companion-input');
+          if (input) input.value = liveText;
+        }
+      }
+
+      if (finalTranscript.trim() && !handled) {
+        handled = true;
+        const cleanText = finalTranscript.trim();
+        setMelodyListeningUI(false);
+        if (source === 'modal') {
+          const input = document.getElementById('companion-input');
+          if (input) {
+            input.value = cleanText;
+            input.placeholder = 'Ask or speak to Melody...';
+          }
+          sendCompanionMessage();
+        } else {
+          handleHomeSpokenMessage(cleanText);
+        }
+      }
+    };
+
+    recognition.onerror = (event) => {
+      setMelodyListeningUI(false);
+      const input = document.getElementById('companion-input');
+      if (input) input.placeholder = 'Ask or speak to Melody...';
+      if (event && event.error === 'not-allowed') {
+        setMascotSpeech("Please allow microphone access in your browser so I can hear you! 🎙️💜");
+        showToast('Microphone permission needed to speak to Melody 🎙️');
+      } else if (event && event.error === 'no-speech') {
+        setMascotSpeech("I didn't hear anything yet—tap Speak to Melody and try again! 🎵");
+      }
+    };
+
+    recognition.onend = () => {
+      setMelodyListeningUI(false);
+      const input = document.getElementById('companion-input');
+      if (input) input.placeholder = 'Ask or speak to Melody...';
+      if (finalTranscript.trim() && !handled) {
+        handled = true;
+        if (source === 'modal') {
+          sendCompanionMessage();
+        } else {
+          handleHomeSpokenMessage(finalTranscript.trim());
+        }
+      }
+    };
+
+    recognition.start();
+  } catch (err) {
+    setMelodyListeningUI(false);
+    showToast('Could not start voice mic—try typing in Ask Melody AI! 💬');
+  }
 }
 
 // --- 18. AI STORYBOOK GENERATOR (WITH 100% STANDALONE FALLBACK) ---
@@ -2801,3 +2987,4 @@ window.activateTier = activateTier;
 window.refillGuestLives = refillGuestLives;
 window.playAlphaKey = playAlphaKey;
 window.loadDailyFact = loadDailyFact;
+window.toggleSpeakToMelody = toggleSpeakToMelody;

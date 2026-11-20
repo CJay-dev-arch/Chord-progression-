@@ -14,6 +14,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%237E22CE'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='central' text-anchor='middle' font-size='64'%3E%F0%9F%8E%B5%3C/text%3E%3C/svg%3E" />
     <link rel="stylesheet" href="./style.css">
+    <style>
+      .app-view:not(.active), .modal-overlay:not(.open) { display: none; }
+    </style>
   </head>
   <body>
 
@@ -262,7 +265,10 @@
                       <button class="mini-action-btn" onclick="feedMelodySnack()">🍪 Note Cookie</button>
                       <button class="mini-action-btn" onclick="melodySingNote()">🎵 Sing Note</button>
                       <button class="mini-action-btn" onclick="melodyDanceSpin()">💃 Spin Dance</button>
-                      <button class="btn-duo btn-duo-purple" style="padding:8px 15px; font-size:12px;" onclick="openModal('modal-companion')">
+                      <button type="button" class="btn-duo btn-duo-pink" id="btn-speak-melody-home" style="padding:8px 15px; font-size:12px;" onclick="toggleSpeakToMelody('home')">
+                        🎙️ Speak to Melody
+                      </button>
+                      <button type="button" class="btn-duo btn-duo-purple" style="padding:8px 15px; font-size:12px;" onclick="openModal('modal-companion')">
                         💬 Ask Melody AI
                       </button>
                     </div>
@@ -1211,8 +1217,9 @@
         </div>
 
         <div style="display:flex; gap:10px;">
-          <input type="text" id="companion-input" class="duo-input" placeholder="Ask Melody a question..." onkeydown="if(event.key==='Enter') sendCompanionMessage()" />
-          <button class="btn-duo btn-duo-purple" style="padding:12px 20px;" onclick="sendCompanionMessage()">Send</button>
+          <input type="text" id="companion-input" class="duo-input" placeholder="Ask or speak to Melody..." onkeydown="if(event.key==='Enter') sendCompanionMessage()" />
+          <button type="button" class="btn-duo btn-duo-pink" id="btn-speak-melody-modal" style="padding:12px 16px;" onclick="toggleSpeakToMelody('modal')" title="Speak to Melody with your microphone">🎙️</button>
+          <button type="button" class="btn-duo btn-duo-purple" style="padding:12px 20px;" onclick="sendCompanionMessage()">Send</button>
         </div>
       </div>
     </div>

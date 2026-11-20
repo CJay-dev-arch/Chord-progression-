@@ -20,6 +20,7 @@ function copyStandaloneScripts() {
 
 export default defineConfig(() => {
   return {
+    base: './',
     plugins: [react(), tailwindcss(), copyStandaloneScripts()],
     resolve: {
       alias: {
