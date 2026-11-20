@@ -1,11 +1,26 @@
+import fs from 'fs';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
 
+function copyStandaloneScripts() {
+  return {
+    name: 'copy-standalone-scripts',
+    closeBundle() {
+      const distDir = path.resolve(__dirname, 'dist');
+      if (!fs.existsSync(distDir)) fs.mkdirSync(distDir, { recursive: true });
+      const appSrc = path.resolve(__dirname, 'app.js');
+      if (fs.existsSync(appSrc)) {
+        fs.copyFileSync(appSrc, path.join(distDir, 'app.js'));
+      }
+    },
+  };
+}
+
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), copyStandaloneScripts()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

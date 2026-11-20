@@ -70,6 +70,12 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+app.get('/favicon.ico', (req, res) => {
+  res.type('image/svg+xml').send(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="24" fill="#7E22CE"/><text x="50%" y="54%" dominant-baseline="central" text-anchor="middle" font-size="64">🎵</text></svg>`
+  );
+});
+
 // Configure Google Sheets Webhook endpoint dynamically from Admin UI
 app.post('/api/analytics/configure-sheets', (req, res) => {
   const { webhookUrl } = req.body;
@@ -791,6 +797,11 @@ async function startServer() {
     app.get('/style.css', (req, res) => {
       res.type('text/css');
       res.sendFile(path.resolve(__dirname, 'style.css'));
+    });
+
+    app.get('/app.js', (req, res) => {
+      res.type('application/javascript');
+      res.sendFile(path.resolve(__dirname, 'app.js'));
     });
 
     const { createServer: createViteServer } = await import('vite');

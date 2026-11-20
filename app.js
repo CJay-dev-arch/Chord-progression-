@@ -760,8 +760,22 @@ function getActiveLearner() {
   return state.learners.find(l => l.id === state.activeLearnerId) || state.learners[0];
 }
 
+function safeStorageGet(key) {
+  try {
+    return window.localStorage.getItem(key);
+  } catch (e) {
+    return null;
+  }
+}
+
+function safeStorageSet(key, value) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch (e) {}
+}
+
 function loadState() {
-  const saved = localStorage.getItem('melody_minds_condensed_v2');
+  const saved = safeStorageGet('melody_minds_condensed_v2');
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
@@ -771,7 +785,7 @@ function loadState() {
 }
 
 function saveState() {
-  localStorage.setItem('melody_minds_condensed_v2', JSON.stringify(state));
+  safeStorageSet('melody_minds_condensed_v2', JSON.stringify(state));
   updateTopBar();
   renderMascotAccessory();
 }
@@ -2095,6 +2109,14 @@ function submitNewProfile(e) {
 }
 
 // --- 17. AI COMPANION (MELODY THE MASCOT) ---
+let _backendApiAvailable =
+  window.location.protocol !== 'file:' &&
+  (window.location.port === '3000' || window.location.hostname.endsWith('.run.app'));
+
+function canUseBackendApi() {
+  return _backendApiAvailable;
+}
+
 async function sendCompanionMessage() {
   const input = document.getElementById('companion-input');
   if (!input || !input.value.trim()) return;
@@ -2106,23 +2128,32 @@ async function sendCompanionMessage() {
   const learner = getActiveLearner();
   const loadingBubble = addChatMessage('assistant', 'Melody is humming and thinking... 🎵✨');
 
-  try {
-    const res = await fetch('/api/gemini/companion', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: msg,
-        learnerName: state.user.signedIn ? state.user.stageName : learner.name,
-        learnerAge: learner.age,
-        subject: 'General Curiosity'
-      })
-    });
-    const data = await res.json();
-    loadingBubble.textContent = data.reply || getLocalMascotReply(msg, learner.name);
-  } catch (err) {
-    loadingBubble.textContent = getLocalMascotReply(msg, learner.name);
+  if (canUseBackendApi()) {
+    try {
+      const res = await fetch('/api/gemini/companion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: msg,
+          learnerName: state.user.signedIn ? state.user.stageName : learner.name,
+          learnerAge: learner.age,
+          subject: 'General Curiosity'
+        })
+      });
+      if (!res.ok) {
+        if (res.status === 404) _backendApiAvailable = false;
+        throw new Error('Offline mode');
+      }
+      const data = await res.json();
+      loadingBubble.textContent = data.reply || getLocalMascotReply(msg, learner.name);
+      if (learner.narrationEnabled) audio.speakNarration(loadingBubble.textContent);
+      return;
+    } catch (err) {
+      // Fall through to local Mascot response
+    }
   }
 
+  loadingBubble.textContent = getLocalMascotReply(msg, learner.name);
   if (learner.narrationEnabled) {
     audio.speakNarration(loadingBubble.textContent);
   }
@@ -2219,26 +2250,31 @@ async function generateAIStorybook() {
   const output = document.getElementById('storybook-result');
   if (output) output.innerHTML = '<p style="text-align:center; padding:20px;">Weaving a magical musical tale for you... 🎶📖</p>';
 
-  try {
-    const res = await fetch('/api/gemini/storybook', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        topic,
-        subject: 'Story Adventure',
-        learnerName: childName,
-        learnerAge: learner.age
-      })
-    });
-    if (!res.ok) throw new Error('Offline mode');
-    const data = await res.json();
-    if (data && data.storybook && data.storybook.chapters) {
-      renderStorybookHTML(output, data.storybook);
-      audio.playCorrectSound();
-      return;
+  if (canUseBackendApi()) {
+    try {
+      const res = await fetch('/api/gemini/storybook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic,
+          subject: 'Story Adventure',
+          learnerName: childName,
+          learnerAge: learner.age
+        })
+      });
+      if (!res.ok) {
+        if (res.status === 404) _backendApiAvailable = false;
+        throw new Error('Offline mode');
+      }
+      const data = await res.json();
+      if (data && data.storybook && data.storybook.chapters) {
+        renderStorybookHTML(output, data.storybook);
+        audio.playCorrectSound();
+        return;
+      }
+    } catch (e) {
+      // Seamless standalone client-side fallback
     }
-  } catch (e) {
-    // Seamless standalone client-side fallback
   }
 
   if (output) {
@@ -2267,17 +2303,20 @@ async function generateCustomSong() {
   output.innerHTML = '<p style="text-align:center; padding:16px;">Composing a bouncy rhythm... 🎤🎵</p>';
   let song = null;
 
-  try {
-    const res = await fetch('/api/gemini/song-creator', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ topic, subject: 'Music & Discovery', style: 'bouncy kids song' })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.song && data.song.title) song = data.song;
-    }
-  } catch (e) {}
+  if (canUseBackendApi()) {
+    try {
+      const res = await fetch('/api/gemini/song-creator', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic, subject: 'Music & Discovery', style: 'bouncy kids song' })
+      });
+      if (!res.ok && res.status === 404) _backendApiAvailable = false;
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.song && data.song.title) song = data.song;
+      }
+    } catch (e) {}
+  }
 
   if (!song) song = buildLocalSong(topic);
 
@@ -2599,6 +2638,24 @@ const FALLBACK_FACTS = [
     title: 'Planetary Tempo!',
     fact: 'Every planet in our solar system keeps a steady beat spinning around the glowing Sun!',
     rhymingChant: 'Spinning round, cosmic sound, eight worlds in a groove!'
+  },
+  {
+    emoji: '📖',
+    title: 'Rhyming Builds Super Memory!',
+    fact: 'When words rhyme in a song, your ears predict the next sound—helping kids remember new words 3x faster!',
+    rhymingChant: 'Rhyme the line and sing the word, the happiest tale you ever heard!'
+  },
+  {
+    emoji: '🌻',
+    title: 'Math Beats in Sunflowers!',
+    fact: 'Sunflowers arrange their seeds in musical Fibonacci spirals so every seed gets cozy sunshine!',
+    rhymingChant: 'Count the spirals, count the beats, math is full of nature treats!'
+  },
+  {
+    emoji: '🌧️',
+    title: 'Clouds Tap-Dance as Rain!',
+    fact: 'Clouds hold millions of tiny water droplets floating high until they get heavy and tap-dance down as rain!',
+    rhymingChant: 'From puddles up to clouds so high, raindrops dance across the sky!'
   }
 ];
 
@@ -2610,26 +2667,31 @@ async function loadDailyFact(forceRefresh = false) {
 
   if (!titleEl || !textEl) return;
 
-  try {
-    const subjects = ['Music & Rhythm', 'Mathematics', 'Science & Space', 'Reading & Phonics'];
-    const pick = subjects[Math.floor(Math.random() * subjects.length)];
-    const res = await fetch(`/api/gemini/daily-fact?subject=${encodeURIComponent(pick)}`);
-    if (!res.ok) throw new Error('Fact unavailable');
-    const data = await res.json();
-    const f = (data && data.fact && typeof data.fact === 'object') ? data.fact : data;
-    if (f && f.title && f.fact) {
-      if (emojiEl) emojiEl.textContent = f.emoji || '🎵';
-      titleEl.textContent = f.title;
-      textEl.textContent = f.fact;
-      if (chantEl) chantEl.textContent = `"${f.rhymingChant || 'Sing and learn every day!'}"`;
-      if (forceRefresh) {
-        audio.playNote('E5', 0.25, 'chime');
-        showToast('Loaded a fresh musical fact! ✨');
+  if (canUseBackendApi()) {
+    try {
+      const subjects = ['Music & Rhythm', 'Mathematics', 'Science & Space', 'Reading & Phonics'];
+      const pick = subjects[Math.floor(Math.random() * subjects.length)];
+      const res = await fetch(`/api/gemini/daily-fact?subject=${encodeURIComponent(pick)}`);
+      if (!res.ok) {
+        if (res.status === 404) _backendApiAvailable = false;
+        throw new Error('Fact unavailable');
       }
-      return;
+      const data = await res.json();
+      const f = (data && data.fact && typeof data.fact === 'object') ? data.fact : data;
+      if (f && f.title && f.fact) {
+        if (emojiEl) emojiEl.textContent = f.emoji || '🎵';
+        titleEl.textContent = f.title;
+        textEl.textContent = f.fact;
+        if (chantEl) chantEl.textContent = `"${f.rhymingChant || 'Sing and learn every day!'}"`;
+        if (forceRefresh) {
+          audio.playNote('E5', 0.25, 'chime');
+          showToast('Loaded a fresh musical fact! ✨');
+        }
+        return;
+      }
+    } catch (e) {
+      // Graceful local fallback
     }
-  } catch (e) {
-    // Graceful local fallback
   }
 
   const fb = FALLBACK_FACTS[Math.floor(Math.random() * FALLBACK_FACTS.length)];
@@ -2637,7 +2699,10 @@ async function loadDailyFact(forceRefresh = false) {
   titleEl.textContent = fb.title;
   textEl.textContent = fb.fact;
   if (chantEl) chantEl.textContent = `"${fb.rhymingChant}"`;
-  if (forceRefresh) audio.playNote('C5', 0.25, 'chime');
+  if (forceRefresh) {
+    audio.playNote('C5', 0.25, 'chime');
+    showToast('Loaded a fresh musical fact! ✨');
+  }
 }
 
 function renderHomeSubjects() {
@@ -2656,7 +2721,9 @@ function cycleOrAddProfile() {
 }
 
 // --- INITIALIZE ON LOAD ---
-window.addEventListener('DOMContentLoaded', () => {
+function initMelodyMindsApp() {
+  if (window.__melodyMindsInitialized) return;
+  window.__melodyMindsInitialized = true;
   loadState();
   updateTopBar();
   renderAlphabetStrip();
@@ -2667,7 +2734,13 @@ window.addEventListener('DOMContentLoaded', () => {
   syncMusicPlayerUI();
   loadDailyFact(false);
   showView('home');
-});
+}
+
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', initMelodyMindsApp);
+} else {
+  initMelodyMindsApp();
+}
 
 // Expose globals for inline HTML event handlers
 window.showView = showView;
