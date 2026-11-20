@@ -1,3 +1,4 @@
+
 /**
  * ========================================================
  * MELODY MINDS - COMPLETE HTML / CSS / JS ENGINE
@@ -12,6 +13,9 @@
  * @typedef {{ id: string, title: string, emoji: string, desc: string }} Badge
  * @typedef {{ id: string, name: string, age: number, avatar: string, stars: number, streak: number, outfit: string, unlockedOutfits: string[], completedLessons: string[], favoriteSongs: string[], soundEnabled: boolean, narrationEnabled: boolean }} LearnerProfile
  */
+const SUPABASE_URL = 'https://aieeaeokaqgiqholitnm.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_zFgPi8HXGflcsYRRmz7Sag_fMFUAVpI';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 // --- 1. WEB AUDIO API SYNTHESIZER ---
 const NOTE_FREQS = {
