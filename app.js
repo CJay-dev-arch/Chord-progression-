@@ -16,7 +16,17 @@
 const SUPABASE_URL = 'https://aieeaeokaqgiqholitnm.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_zFgPi8HXGflcsYRRmz7Sag_fMFUAVpI';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-
+    const subjects = ['Music & Rhythm', 'Mathematics', 'Science & Space', 'Reading & Phonics'];
+    const pick = subjects[Math.floor(Math.random() * subjects.length)];
+    
+    // Fetch a static JSON file instead of a dynamic endpoint
+    const res = await fetch('/Chord-progression-/api/daily-fact.json'); 
+    if (!res.ok) throw new Error('Fact unavailable');
+    
+    const data = await res.json();
+    // Since the server can't filter by subject, find the matching data in the array locally
+    const factData = Array.isArray(data) ? data.find(f => f.subject === pick) : data;
+    const f = (factData && factData.fact && typeof factData.fact === 'object') ? factData.fact : factData;
 // --- 1. WEB AUDIO API SYNTHESIZER ---
 const NOTE_FREQS = {
   'C3': 130.81, 'D3': 146.83, 'E3': 164.81, 'F3': 174.61, 'G3': 196.00, 'A3': 220.00, 'B3': 246.94,
