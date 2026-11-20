@@ -82,6 +82,11 @@ button, input, select, textarea {
   font-family: inherit;
 }
 
+button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 /* ----------------------------------------------------
    ANIMATIONS
    ---------------------------------------------------- */

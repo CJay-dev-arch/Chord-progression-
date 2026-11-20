@@ -2111,7 +2111,7 @@ function submitNewProfile(e) {
 // --- 17. AI COMPANION (MELODY THE MASCOT) ---
 let _backendApiAvailable =
   window.location.protocol !== 'file:' &&
-  (window.location.port === '3000' || window.location.hostname.endsWith('.run.app'));
+  (window.location.port === '3000' || /^ais-(dev|pre)-/.test(window.location.hostname));
 
 function canUseBackendApi() {
   return _backendApiAvailable;
@@ -2667,7 +2667,7 @@ async function loadDailyFact(forceRefresh = false) {
 
   if (!titleEl || !textEl) return;
 
-  if (canUseBackendApi()) {
+  if (forceRefresh && canUseBackendApi()) {
     try {
       const subjects = ['Music & Rhythm', 'Mathematics', 'Science & Space', 'Reading & Phonics'];
       const pick = subjects[Math.floor(Math.random() * subjects.length)];
