@@ -2261,3 +2261,92 @@ button {
   animation: micPulse 1.15s infinite ease-in-out;
 }
 
+/* ============================================================
+   KID-FRIENDLY PASS — ages 6-8, lighter declutter (2026-11-23)
+   Home page only: fewer choices on screen at once, bigger
+   buttons and text, more breathing room. Nothing is deleted —
+   the hidden tiles and buttons are still reachable from the
+   Learn, Keys and Beats views, and Music Park + Skill Explorer
+   sit one tap away under "More fun stuff" below.
+   ============================================================ */
+
+/* --- Quick Launch: 8 small tiles -> 4 big ones --- */
+#view-home .top-activity-strip {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+/* Hide Science, STEM Code, Jukebox and All 11 Maps on home */
+#view-home .top-activity-strip .activity-tile:nth-child(3),
+#view-home .top-activity-strip .activity-tile:nth-child(4),
+#view-home .top-activity-strip .activity-tile:nth-child(7),
+#view-home .top-activity-strip .activity-tile:nth-child(8) {
+  display: none;
+}
+#view-home .activity-tile {
+  min-height: 112px;
+  font-size: 15px;
+  padding: 14px 8px;
+  gap: 8px;
+  border-radius: 22px;
+}
+#view-home .activity-tile-emoji {
+  width: 52px;
+  height: 52px;
+  font-size: 28px;
+  border-radius: 16px;
+}
+
+/* --- Mascot buttons: 6 small -> 4 big --- */
+/* Hide Note Cookie and Ask Melody AI on home */
+#view-home .mascot-actions-row .mini-action-btn:nth-child(2),
+#view-home .mascot-actions-row .mini-action-btn:nth-child(6) {
+  display: none;
+}
+#view-home .mascot-actions-row { gap: 10px; }
+#view-home .mini-action-btn {
+  font-size: 15px;
+  padding: 12px 18px;
+  min-height: 48px;
+  border-radius: 16px;
+}
+
+/* --- Breathing room on home --- */
+#view-home .classroom-frame { padding: 24px; margin-bottom: 28px; }
+#view-home .section-heading { font-size: 26px; }
+#view-home .alpha-key { font-size: 14px; padding: 9px 2px; }
+#view-home .bento-mini-tile { padding: 16px 10px; }
+#view-home .bento-mini-tile-title { font-size: 15px; }
+
+/* --- "More fun stuff": Music Park + Skill Explorer, one tap away --- */
+#view-home .more-fun {
+  background: #FFFFFF;
+  border: 2px solid var(--border-card);
+  border-radius: 22px;
+  padding: 6px 18px 18px;
+  box-shadow: 0 4px 0 var(--border-card-dark);
+  margin-bottom: 24px;
+}
+#view-home .more-fun summary {
+  list-style: none;
+  cursor: pointer;
+  font-family: var(--font-fun);
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--brand-purple);
+  padding: 14px 4px 10px;
+  user-select: none;
+}
+#view-home .more-fun summary::-webkit-details-marker { display: none; }
+#view-home .more-fun summary::after { content: "  \25BE"; }
+#view-home .more-fun[open] summary::after { content: "  \25B4"; }
+
+/* --- Dock: slightly bigger tap targets on phones --- */
+.bottom-dock { height: 78px; }
+.dock-tab { font-size: 12px; padding: 8px 12px; }
+.dock-tab .dock-icon { font-size: 24px; }
+
+@media (max-width: 680px) {
+  #view-home .top-activity-strip { grid-template-columns: repeat(2, 1fr); }
+  #view-home .classroom-frame { padding: 18px; }
+}
