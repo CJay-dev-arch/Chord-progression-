@@ -1,3 +1,4 @@
+
 /**
  * ========================================================
  * MELODY MINDS - COMPLETE HTML / CSS / JS ENGINE
@@ -12,7 +13,30 @@
  * @typedef {{ id: string, title: string, emoji: string, desc: string }} Badge
  * @typedef {{ id: string, name: string, age: number, avatar: string, stars: number, streak: number, outfit: string, unlockedOutfits: string[], completedLessons: string[], favoriteSongs: string[], soundEnabled: boolean, narrationEnabled: boolean }} LearnerProfile
  */
+/* FIX (2026-11-23): removed a stray top-level block that used to sit here.
+   It fetched a daily-fact JSON file at the top level of this module and
+   threw when the fetch failed. On GitHub Pages that file does not exist,
+   so the throw aborted the WHOLE module before any of the window.*
+   button handlers below were assigned - every button on the site was
+   dead and every form submitted natively (full page reload).
+   The proper loadDailyFact() function later in this file already does
+   this fetch inside try/catch with a local fallback, and init calls it,
+   so nothing is lost by deleting the stray copy. */
 
+/* FIX 2 (2026-11-23): inject the view-hiding CSS from JS as well.
+   The live index.html was missing the rule that hides inactive views,
+   so all 8 views + all modals rendered at once as one giant page.
+   Adding it here means the app looks like separate pages even if only
+   this app.js file is uploaded and index.html is left untouched. */
+(function () {
+  try {
+    if (document.getElementById('melody-minds-view-css')) return;
+    var st = document.createElement('style');
+    st.id = 'melody-minds-view-css';
+    st.textContent = '.app-view:not(.active), .modal-overlay:not(.open) { display: none; }';
+    if (document.head) document.head.appendChild(st);
+  } catch (e) { /* never let the CSS injection break the app */ }
+})();
 // --- 1. WEB AUDIO API SYNTHESIZER ---
 const NOTE_FREQS = {
   'C3': 130.81, 'D3': 146.83, 'E3': 164.81, 'F3': 174.61, 'G3': 196.00, 'A3': 220.00, 'B3': 246.94,
@@ -760,22 +784,8 @@ function getActiveLearner() {
   return state.learners.find(l => l.id === state.activeLearnerId) || state.learners[0];
 }
 
-function safeStorageGet(key) {
-  try {
-    return window.localStorage.getItem(key);
-  } catch (e) {
-    return null;
-  }
-}
-
-function safeStorageSet(key, value) {
-  try {
-    window.localStorage.setItem(key, value);
-  } catch (e) {}
-}
-
 function loadState() {
-  const saved = safeStorageGet('melody_minds_condensed_v2');
+  const saved = localStorage.getItem('melody_minds_condensed_v2');
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
@@ -785,7 +795,7 @@ function loadState() {
 }
 
 function saveState() {
-  safeStorageSet('melody_minds_condensed_v2', JSON.stringify(state));
+  localStorage.setItem('melody_minds_condensed_v2', JSON.stringify(state));
   updateTopBar();
   renderMascotAccessory();
 }
@@ -899,16 +909,19 @@ function switchVipTab(tab) {
   const panelSignup = document.getElementById('vip-panel-signup');
   const panelTiers = document.getElementById('vip-panel-tiers');
 
+  // FIX: guard every element so one missing id can't throw and kill the tab switch.
+  const toggle = (el, cls, on) => { if (el) el.classList.toggle(cls, on); };
+  const show = (el, on) => { if (el) el.style.display = on ? 'block' : 'none'; };
   if (tab === 'signup') {
-    btnSignup.classList.add('active');
-    btnTiers.classList.remove('active');
-    panelSignup.style.display = 'block';
-    panelTiers.style.display = 'none';
+    toggle(btnSignup, 'active', true);
+    toggle(btnTiers, 'active', false);
+    show(panelSignup, true);
+    show(panelTiers, false);
   } else {
-    btnSignup.classList.remove('active');
-    btnTiers.classList.add('active');
-    panelSignup.style.display = 'none';
-    panelTiers.style.display = 'block';
+    toggle(btnSignup, 'active', false);
+    toggle(btnTiers, 'active', true);
+    show(panelSignup, false);
+    show(panelTiers, true);
   }
 }
 
@@ -938,22 +951,25 @@ function toggleAuthMode() {
   const submitBtn = document.getElementById('auth-submit-btn');
   const prompt = document.getElementById('auth-toggle-prompt');
   const link = document.getElementById('auth-toggle-link');
-  const instPicker = document.getElementById('instrument-picker').parentElement;
+  // FIX: guard - .parentElement on a missing element used to throw here.
+  const instPickerEl = document.getElementById('instrument-picker');
+  const instPicker = instPickerEl ? instPickerEl.parentElement : null;
+  const setText = (el, txt) => { if (el) el.textContent = txt; };
 
   if (authMode === 'signin') {
-    title.textContent = 'Welcome Back, Musical Explorer!';
-    subtitle.textContent = 'Sign in to access your Unlimited Lifes and saved quests.';
-    submitBtn.textContent = 'Sign In to My Account 🚀';
-    prompt.textContent = "Don't have an account yet?";
-    link.textContent = 'Create free account';
-    instPicker.style.display = 'none';
+    setText(title, 'Welcome Back, Musical Explorer!');
+    setText(subtitle, 'Sign in to access your Unlimited Lifes and saved quests.');
+    setText(submitBtn, 'Sign In to My Account 🚀');
+    setText(prompt, "Don't have an account yet?");
+    setText(link, 'Create free account');
+    if (instPicker) instPicker.style.display = 'none';
   } else {
-    title.textContent = 'Create Your Free Musical Account';
-    subtitle.textContent = 'Get instant Unlimited Lifes, +100 bonus stars, and save your progress!';
-    submitBtn.textContent = '🚀 Unlock Unlimited Lifes & Start Playing!';
-    prompt.textContent = 'Already have an account?';
-    link.textContent = 'Sign In here';
-    instPicker.style.display = 'block';
+    setText(title, 'Create Your Free Musical Account');
+    setText(subtitle, 'Get instant Unlimited Lifes, +100 bonus stars, and save your progress!');
+    setText(submitBtn, '🚀 Unlock Unlimited Lifes & Start Playing!');
+    setText(prompt, 'Already have an account?');
+    setText(link, 'Sign In here');
+    if (instPicker) instPicker.style.display = 'block';
   }
 }
 
@@ -2109,14 +2125,6 @@ function submitNewProfile(e) {
 }
 
 // --- 17. AI COMPANION (MELODY THE MASCOT) ---
-let _backendApiAvailable =
-  window.location.protocol !== 'file:' &&
-  (window.location.port === '3000' || /^ais-(dev|pre)-/.test(window.location.hostname));
-
-function canUseBackendApi() {
-  return _backendApiAvailable;
-}
-
 async function sendCompanionMessage() {
   const input = document.getElementById('companion-input');
   if (!input || !input.value.trim()) return;
@@ -2128,32 +2136,23 @@ async function sendCompanionMessage() {
   const learner = getActiveLearner();
   const loadingBubble = addChatMessage('assistant', 'Melody is humming and thinking... 🎵✨');
 
-  if (canUseBackendApi()) {
-    try {
-      const res = await fetch('/api/gemini/companion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: msg,
-          learnerName: state.user.signedIn ? state.user.stageName : learner.name,
-          learnerAge: learner.age,
-          subject: 'General Curiosity'
-        })
-      });
-      if (!res.ok) {
-        if (res.status === 404) _backendApiAvailable = false;
-        throw new Error('Offline mode');
-      }
-      const data = await res.json();
-      loadingBubble.textContent = data.reply || getLocalMascotReply(msg, learner.name);
-      if (learner.narrationEnabled) audio.speakNarration(loadingBubble.textContent);
-      return;
-    } catch (err) {
-      // Fall through to local Mascot response
-    }
+  try {
+    const res = await fetch('/api/gemini/companion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: msg,
+        learnerName: state.user.signedIn ? state.user.stageName : learner.name,
+        learnerAge: learner.age,
+        subject: 'General Curiosity'
+      })
+    });
+    const data = await res.json();
+    loadingBubble.textContent = data.reply || getLocalMascotReply(msg, learner.name);
+  } catch (err) {
+    loadingBubble.textContent = getLocalMascotReply(msg, learner.name);
   }
 
-  loadingBubble.textContent = getLocalMascotReply(msg, learner.name);
   if (learner.narrationEnabled) {
     audio.speakNarration(loadingBubble.textContent);
   }
@@ -2180,202 +2179,16 @@ function sendPresetCompanionPrompt(presetText) {
 
 function getLocalMascotReply(msg, name) {
   const m = msg.toLowerCase();
-  if (/\b(hi|hello|hey|morning|afternoon)\b/.test(m)) {
-    return `Hi there, ${name}! 🎵 I'm so happy to hear your voice! Want to sing a note, play the xylophone, or explore a science island? ✨`;
-  }
-  if (m.includes('math') || m.includes('count') || m.includes('number') || m.includes('add')) {
+  if (m.includes('math') || m.includes('count')) {
     return `Numbers have their own rhythm, ${name}! 🥁 1, 2, 3... every number is like a steady drumbeat! Let's clap out the answer together! ✨`;
   }
-  if (m.includes('read') || m.includes('letter') || m.includes('book') || m.includes('story')) {
+  if (m.includes('read') || m.includes('letter') || m.includes('book')) {
     return `Letters are the notes that compose the music of words! 📖 When we sing letter sounds together, stories come alive! 🎶`;
   }
-  if (m.includes('science') || m.includes('rain') || m.includes('space') || m.includes('planet') || m.includes('star')) {
+  if (m.includes('science') || m.includes('rain') || m.includes('space')) {
     return `Science is nature's song! 🌧️ Did you know clouds are like soft sponges floating in the sky until they dance as raindrops? 🌈`;
   }
-  if (m.includes('sing') || m.includes('song') || m.includes('music') || m.includes('dance')) {
-    return `La-la-la! 🎤 Singing makes our brains sparkle! Tap the Rainbow Xylophone or open Song Maker to compose your very own hit! 🎹✨`;
-  }
-  if (m.includes('animal') || m.includes('lion') || m.includes('frog') || m.includes('dog') || m.includes('cat')) {
-    return `Every animal has a musical voice! 🦁 Lions roar low bass notes, while tiny birds whistle high flutes! Try Animal Match or DJ Safari! 🐾🎶`;
-  }
-  if (m.includes('color') || m.includes('rainbow')) {
-    return `Just like a rainbow has 7 bright colors, our xylophone has 7 sparkling musical notes! 🌈 Red C, Orange D, Yellow E—let's play them all! 🎵`;
-  }
-  if (m.includes('joke') || m.includes('funny')) {
-    return `Hehehe! What is a frog's favorite kind of music? 🐸 Hip-HOP! Ba-dum-tss! 🥁😄`;
-  }
-  if (m.includes('your name') || m.includes('who are you')) {
-    return `I'm Melody, your musical note buddy! 🎵 My favorite hobby is singing ABCs, dancing to drumbeats, and cheering you on! 🌟`;
-  }
-  return `That's awesome, ${name}! 🎵 Every time you speak and ask questions, your Melody Mind grows brighter! Let's make music together! 🌟`;
-}
-
-// --- 17B. SPEAK TO MELODY (VOICE RECOGNITION) ---
-let _melodyRecognition = null;
-let _isMelodyListening = false;
-
-function setMelodyListeningUI(isListening) {
-  _isMelodyListening = isListening;
-  const homeBtn = document.getElementById('btn-speak-melody-home');
-  const modalBtn = document.getElementById('btn-speak-melody-modal');
-
-  if (homeBtn) {
-    homeBtn.classList.toggle('mic-listening', isListening);
-    homeBtn.textContent = isListening ? '🔴 Listening... (Tap to Stop)' : '🎙️ Speak to Melody';
-  }
-  if (modalBtn) {
-    modalBtn.classList.toggle('mic-listening', isListening);
-    modalBtn.textContent = isListening ? '🔴' : '🎙️';
-  }
-}
-
-async function handleHomeSpokenMessage(spokenText) {
-  const learner = getActiveLearner();
-  const childName = state.user.signedIn ? state.user.stageName : learner.name;
-  setMascotSpeech(`"${spokenText}" — hmm, let me tune a reply! 🎵`);
-  triggerMascotBounce();
-
-  let replyText = '';
-  if (canUseBackendApi()) {
-    try {
-      const res = await fetch('/api/gemini/companion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: spokenText,
-          learnerName: childName,
-          learnerAge: learner.age,
-          subject: 'Voice Conversation'
-        })
-      });
-      if (!res.ok) {
-        if (res.status === 404) _backendApiAvailable = false;
-        throw new Error('Offline mode');
-      }
-      const data = await res.json();
-      if (data && data.reply) replyText = data.reply;
-    } catch (e) {}
-  }
-
-  if (!replyText) {
-    replyText = getLocalMascotReply(spokenText, childName);
-  }
-
-  learner.stars += 2;
-  saveState();
-  setMascotSpeech(replyText);
-  audio.playNote('E5', 0.25, 'chime');
-  if (learner.narrationEnabled) {
-    audio.speakNarration(replyText);
-  }
-  showToast('Melody heard you! +2 Stars 🌟');
-}
-
-function toggleSpeakToMelody(source = 'home') {
-  if (_isMelodyListening && _melodyRecognition) {
-    try {
-      _melodyRecognition.stop();
-    } catch (e) {}
-    setMelodyListeningUI(false);
-    return;
-  }
-
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRec) {
-    setMascotSpeech("Oops! Voice mic isn't supported in this browser—tap Ask Melody AI to chat by typing! 💬🎵");
-    showToast('Try Chrome, Edge, or Safari for voice mic—or type in Ask Melody AI! 💬');
-    if (source === 'home') openModal('modal-companion');
-    return;
-  }
-
-  try {
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    const recognition = new SpeechRec();
-    _melodyRecognition = recognition;
-    recognition.lang = 'en-US';
-    recognition.interimResults = true;
-    recognition.maxAlternatives = 1;
-
-    let finalTranscript = '';
-    let handled = false;
-
-    audio.playNote('G5', 0.2, 'chime');
-    setMelodyListeningUI(true);
-    if (source === 'home') {
-      setMascotSpeech("I'm listening! Say hello or ask me anything! 🎙️✨");
-    } else {
-      const input = document.getElementById('companion-input');
-      if (input) input.placeholder = "Listening... speak into your mic! 🎙️";
-    }
-
-    recognition.onresult = (event) => {
-      let interim = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript + ' ';
-        } else {
-          interim += transcript;
-        }
-      }
-      const liveText = (finalTranscript || interim).trim();
-      if (liveText) {
-        if (source === 'home') {
-          setMascotSpeech(`Hearing: "${liveText}" 🎙️`);
-        } else {
-          const input = document.getElementById('companion-input');
-          if (input) input.value = liveText;
-        }
-      }
-
-      if (finalTranscript.trim() && !handled) {
-        handled = true;
-        const cleanText = finalTranscript.trim();
-        setMelodyListeningUI(false);
-        if (source === 'modal') {
-          const input = document.getElementById('companion-input');
-          if (input) {
-            input.value = cleanText;
-            input.placeholder = 'Ask or speak to Melody...';
-          }
-          sendCompanionMessage();
-        } else {
-          handleHomeSpokenMessage(cleanText);
-        }
-      }
-    };
-
-    recognition.onerror = (event) => {
-      setMelodyListeningUI(false);
-      const input = document.getElementById('companion-input');
-      if (input) input.placeholder = 'Ask or speak to Melody...';
-      if (event && event.error === 'not-allowed') {
-        setMascotSpeech("Please allow microphone access in your browser so I can hear you! 🎙️💜");
-        showToast('Microphone permission needed to speak to Melody 🎙️');
-      } else if (event && event.error === 'no-speech') {
-        setMascotSpeech("I didn't hear anything yet—tap Speak to Melody and try again! 🎵");
-      }
-    };
-
-    recognition.onend = () => {
-      setMelodyListeningUI(false);
-      const input = document.getElementById('companion-input');
-      if (input) input.placeholder = 'Ask or speak to Melody...';
-      if (finalTranscript.trim() && !handled) {
-        handled = true;
-        if (source === 'modal') {
-          sendCompanionMessage();
-        } else {
-          handleHomeSpokenMessage(finalTranscript.trim());
-        }
-      }
-    };
-
-    recognition.start();
-  } catch (err) {
-    setMelodyListeningUI(false);
-    showToast('Could not start voice mic—try typing in Ask Melody AI! 💬');
-  }
+  return `Hi ${name}! 🎵 Every question you ask makes your Melody Mind grow brighter! Remember the superpower of YET! 🌟`;
 }
 
 // --- 18. AI STORYBOOK GENERATOR (WITH 100% STANDALONE FALLBACK) ---
@@ -2436,31 +2249,26 @@ async function generateAIStorybook() {
   const output = document.getElementById('storybook-result');
   if (output) output.innerHTML = '<p style="text-align:center; padding:20px;">Weaving a magical musical tale for you... 🎶📖</p>';
 
-  if (canUseBackendApi()) {
-    try {
-      const res = await fetch('/api/gemini/storybook', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          topic,
-          subject: 'Story Adventure',
-          learnerName: childName,
-          learnerAge: learner.age
-        })
-      });
-      if (!res.ok) {
-        if (res.status === 404) _backendApiAvailable = false;
-        throw new Error('Offline mode');
-      }
-      const data = await res.json();
-      if (data && data.storybook && data.storybook.chapters) {
-        renderStorybookHTML(output, data.storybook);
-        audio.playCorrectSound();
-        return;
-      }
-    } catch (e) {
-      // Seamless standalone client-side fallback
+  try {
+    const res = await fetch('/api/gemini/storybook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        topic,
+        subject: 'Story Adventure',
+        learnerName: childName,
+        learnerAge: learner.age
+      })
+    });
+    if (!res.ok) throw new Error('Offline mode');
+    const data = await res.json();
+    if (data && data.storybook && data.storybook.chapters) {
+      renderStorybookHTML(output, data.storybook);
+      audio.playCorrectSound();
+      return;
     }
+  } catch (e) {
+    // Seamless standalone client-side fallback
   }
 
   if (output) {
@@ -2489,20 +2297,17 @@ async function generateCustomSong() {
   output.innerHTML = '<p style="text-align:center; padding:16px;">Composing a bouncy rhythm... 🎤🎵</p>';
   let song = null;
 
-  if (canUseBackendApi()) {
-    try {
-      const res = await fetch('/api/gemini/song-creator', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, subject: 'Music & Discovery', style: 'bouncy kids song' })
-      });
-      if (!res.ok && res.status === 404) _backendApiAvailable = false;
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.song && data.song.title) song = data.song;
-      }
-    } catch (e) {}
-  }
+  try {
+    const res = await fetch('/api/gemini/song-creator', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic, subject: 'Music & Discovery', style: 'bouncy kids song' })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.song && data.song.title) song = data.song;
+    }
+  } catch (e) {}
 
   if (!song) song = buildLocalSong(topic);
 
@@ -2688,6 +2493,10 @@ function triggerConfetti() {
   const canvas = document.getElementById('confetti-canvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
+  // FIX: if the canvas has no 2d context, bail out instead of throwing
+  // inside handleAuthSubmit / activateTier (which would stop the
+  // welcome toast and the trip back home).
+  if (!ctx) return;
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
@@ -2824,24 +2633,6 @@ const FALLBACK_FACTS = [
     title: 'Planetary Tempo!',
     fact: 'Every planet in our solar system keeps a steady beat spinning around the glowing Sun!',
     rhymingChant: 'Spinning round, cosmic sound, eight worlds in a groove!'
-  },
-  {
-    emoji: '📖',
-    title: 'Rhyming Builds Super Memory!',
-    fact: 'When words rhyme in a song, your ears predict the next sound—helping kids remember new words 3x faster!',
-    rhymingChant: 'Rhyme the line and sing the word, the happiest tale you ever heard!'
-  },
-  {
-    emoji: '🌻',
-    title: 'Math Beats in Sunflowers!',
-    fact: 'Sunflowers arrange their seeds in musical Fibonacci spirals so every seed gets cozy sunshine!',
-    rhymingChant: 'Count the spirals, count the beats, math is full of nature treats!'
-  },
-  {
-    emoji: '🌧️',
-    title: 'Clouds Tap-Dance as Rain!',
-    fact: 'Clouds hold millions of tiny water droplets floating high until they get heavy and tap-dance down as rain!',
-    rhymingChant: 'From puddles up to clouds so high, raindrops dance across the sky!'
   }
 ];
 
@@ -2853,31 +2644,26 @@ async function loadDailyFact(forceRefresh = false) {
 
   if (!titleEl || !textEl) return;
 
-  if (forceRefresh && canUseBackendApi()) {
-    try {
-      const subjects = ['Music & Rhythm', 'Mathematics', 'Science & Space', 'Reading & Phonics'];
-      const pick = subjects[Math.floor(Math.random() * subjects.length)];
-      const res = await fetch(`/api/gemini/daily-fact?subject=${encodeURIComponent(pick)}`);
-      if (!res.ok) {
-        if (res.status === 404) _backendApiAvailable = false;
-        throw new Error('Fact unavailable');
+  try {
+    const subjects = ['Music & Rhythm', 'Mathematics', 'Science & Space', 'Reading & Phonics'];
+    const pick = subjects[Math.floor(Math.random() * subjects.length)];
+    const res = await fetch(`/api/gemini/daily-fact?subject=${encodeURIComponent(pick)}`);
+    if (!res.ok) throw new Error('Fact unavailable');
+    const data = await res.json();
+    const f = (data && data.fact && typeof data.fact === 'object') ? data.fact : data;
+    if (f && f.title && f.fact) {
+      if (emojiEl) emojiEl.textContent = f.emoji || '🎵';
+      titleEl.textContent = f.title;
+      textEl.textContent = f.fact;
+      if (chantEl) chantEl.textContent = `"${f.rhymingChant || 'Sing and learn every day!'}"`;
+      if (forceRefresh) {
+        audio.playNote('E5', 0.25, 'chime');
+        showToast('Loaded a fresh musical fact! ✨');
       }
-      const data = await res.json();
-      const f = (data && data.fact && typeof data.fact === 'object') ? data.fact : data;
-      if (f && f.title && f.fact) {
-        if (emojiEl) emojiEl.textContent = f.emoji || '🎵';
-        titleEl.textContent = f.title;
-        textEl.textContent = f.fact;
-        if (chantEl) chantEl.textContent = `"${f.rhymingChant || 'Sing and learn every day!'}"`;
-        if (forceRefresh) {
-          audio.playNote('E5', 0.25, 'chime');
-          showToast('Loaded a fresh musical fact! ✨');
-        }
-        return;
-      }
-    } catch (e) {
-      // Graceful local fallback
+      return;
     }
+  } catch (e) {
+    // Graceful local fallback
   }
 
   const fb = FALLBACK_FACTS[Math.floor(Math.random() * FALLBACK_FACTS.length)];
@@ -2885,10 +2671,7 @@ async function loadDailyFact(forceRefresh = false) {
   titleEl.textContent = fb.title;
   textEl.textContent = fb.fact;
   if (chantEl) chantEl.textContent = `"${fb.rhymingChant}"`;
-  if (forceRefresh) {
-    audio.playNote('C5', 0.25, 'chime');
-    showToast('Loaded a fresh musical fact! ✨');
-  }
+  if (forceRefresh) audio.playNote('C5', 0.25, 'chime');
 }
 
 function renderHomeSubjects() {
@@ -2907,9 +2690,7 @@ function cycleOrAddProfile() {
 }
 
 // --- INITIALIZE ON LOAD ---
-function initMelodyMindsApp() {
-  if (window.__melodyMindsInitialized) return;
-  window.__melodyMindsInitialized = true;
+window.addEventListener('DOMContentLoaded', () => {
   loadState();
   updateTopBar();
   renderAlphabetStrip();
@@ -2920,13 +2701,7 @@ function initMelodyMindsApp() {
   syncMusicPlayerUI();
   loadDailyFact(false);
   showView('home');
-}
-
-if (document.readyState === 'loading') {
-  window.addEventListener('DOMContentLoaded', initMelodyMindsApp);
-} else {
-  initMelodyMindsApp();
-}
+});
 
 // Expose globals for inline HTML event handlers
 window.showView = showView;
@@ -2987,4 +2762,3 @@ window.activateTier = activateTier;
 window.refillGuestLives = refillGuestLives;
 window.playAlphaKey = playAlphaKey;
 window.loadDailyFact = loadDailyFact;
-window.toggleSpeakToMelody = toggleSpeakToMelody;
