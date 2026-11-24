@@ -891,6 +891,13 @@ function updateTopBar() {
 
 // --- 4. VIEW NAVIGATION ---
 function showView(viewId) {
+  // VIP passes sit behind the parent lock, just like the Parent Zone:
+  // a kid tapping any VIP button gets the Grown-Up Check first.
+  // (Session only — parentUnlocked resets when the page reloads.)
+  if (viewId === 'vip' && !parentUnlocked) {
+    openParentGate('vip');
+    return;
+  }
   document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.dock-tab').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.rail-btn').forEach(b => b.classList.remove('active'));
@@ -2066,9 +2073,19 @@ function renderParentView() {
 
 let parentGateExpected = 12;
 
-function openParentGate() {
-  const n1 = 3 + Math.floor(Math.random() * 5);
-  const n2 = 2 + Math.floor(Math.random() * 4);
+// Parent lock — session only, resets when the page reloads.
+// Once a parent passes the Grown-Up Check, VIP + Parent Zone stay
+// open for the rest of the session, so parents are not re-asked.
+let parentUnlocked = false;
+let parentGateNext = 'parent'; // where to go after passing the gate
+
+function openParentGate(next) {
+  parentGateNext = next || 'parent';
+  // Harder gate (2026-11-24): two-digit x one-digit, e.g. 14 x 7 = 98.
+  // The old 3-7 x 2-5 sums were easy enough for a 7-8 year old;
+  // these are still one quick sum for a grown-up.
+  const n1 = 12 + Math.floor(Math.random() * 8);
+  const n2 = 3 + Math.floor(Math.random() * 7);
   parentGateExpected = n1 * n2;
   const qEl = document.getElementById('parent-gate-question');
   const inp = document.getElementById('parent-gate-input');
@@ -2082,9 +2099,15 @@ function submitParentGate(e) {
   const inp = document.getElementById('parent-gate-input');
   const val = parseInt(inp ? inp.value : '', 10);
   if (val === parentGateExpected) {
+    parentUnlocked = true;
     closeModals();
-    showView('parent');
-    showToast('Welcome to the Parent & Teacher Dashboard 👨‍👩‍👧');
+    if (parentGateNext === 'vip') {
+      showView('vip');
+      showToast('Parent verified — VIP Passes unlocked 👑');
+    } else {
+      showView('parent');
+      showToast('Welcome to the Parent & Teacher Dashboard 👨‍👩‍👧');
+    }
   } else {
     audio.playTryAgainSound();
     showToast('Not quite — check the math and try again!');
