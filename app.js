@@ -49,6 +49,9 @@ class AudioEngine {
   constructor() {
     this.ctx = null;
     this.isMuted = false;
+    // Warm up the voice list early so a warm voice is ready by the
+    // time Melody first speaks (browsers load voices lazily).
+    try { if (window.speechSynthesis) window.speechSynthesis.getVoices(); } catch (e) {}
   }
 
   getContext() {
@@ -209,8 +212,21 @@ class AudioEngine {
     try {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.rate = 0.95;
-      u.pitch = 1.25;
+      // Melody's voice — soothing & kid-friendly (2026-11-24):
+      // slower and warmer than before (was rate 0.95, pitch 1.25,
+      // which sounded rushed and squeaky). Gentle pace, soft pitch.
+      u.rate = 0.85;
+      u.pitch = 1.1;
+      u.volume = 1;
+      // Pick the warmest voice on this device: prefer natural
+      // female voices (Chrome's Google US English, Apple's Samantha,
+      // Microsoft's Zira / Aria / Jenny...), fall back to any English
+      // voice, then the browser default. The exact voice depends on
+      // the device/browser — every device ships different voices.
+      const voices = window.speechSynthesis.getVoices() || [];
+      const warmVoice = voices.find(v => /samantha|zira|google us english|aria|jenny|natasha|moira|fiona|karen|susan|veena|tessa|allison|ava/i.test(v.name || '') && /^en/i.test(v.lang || ''))
+        || voices.find(v => /^en/i.test(v.lang || ''));
+      if (warmVoice) u.voice = warmVoice;
       window.speechSynthesis.speak(u);
     } catch (e) {}
   }
